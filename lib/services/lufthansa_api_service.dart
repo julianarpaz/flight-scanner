@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class LufthansaApiService {
-  final String clientId = "fzk3zmapq8y6367tkww7wq62w";
-  final String clientSecret = "uqfPW58JHU";
+  final String clientId = "<client_id>";
+  final String clientSecret = "<client-secret>";
   String? accessToken;
 
   Future<void> getAccessToken() async {
