@@ -4,8 +4,10 @@ class Flight {
   final String flightNumber;
   final String departure;
   final String departureAirport;
+  final String departureTime;
   final String arrival;
   final String arrivalAirport;
+  final String arrivalTime;
 
   Flight({
     required this.duration,
@@ -13,8 +15,10 @@ class Flight {
     required this.flightNumber,
     required this.departure,
     required this.departureAirport,
+    required this.departureTime,
     required this.arrival,
     required this.arrivalAirport,
+    required this.arrivalTime,
   });
 
   factory Flight.fromJson(Map<String, dynamic> json) {
@@ -24,8 +28,10 @@ class Flight {
       flightNumber: json["flightNumber"],
       departure: json["departure"],
       departureAirport: json["departureAirport"],
+      departureTime: json["departure"] ?? "Horário de decolagem disponível",
       arrival: json["arrival"],
       arrivalAirport: json["arrivalAirport"],
+      arrivalTime: json["arrival"] ?? "Previsão de chegada não disponível",
     );
   }
 }
