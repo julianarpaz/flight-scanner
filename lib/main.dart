@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'customtoolbar.dart';
+import '../services/lufthansa_api_service.dart';
+import '../models/flight.dart';
+import '../utils/airlines_data.dart';
 
 Map<int, Color> color = {
   50: const Color.fromRGBO(12, 192, 223, .1),
@@ -35,7 +38,7 @@ class MyApp extends StatelessWidget {
         '/analytics': (context) => PriceMonitoringPage(),
         '/settings': (context) => const SettingsPage(),
         '/mytravels': (context) => const MyTravelsPage(),
-        '/search': (context) => const SearchTravelsPage(),
+        '/search': (context) => SearchTravelsPage(),
         '/searchResults': (context) => SearchResultsPage(),
       },
       theme: ThemeData(
@@ -860,222 +863,6 @@ class MyTravelsPage extends StatelessWidget {
   }
 }
 
-class SearchTravelsPage extends StatefulWidget {
-  const SearchTravelsPage({Key? key}) : super(key: key);
-
-  @override
-  State<SearchTravelsPage> createState() => _SearchTravelsPageState();
-}
-
-class _SearchTravelsPageState extends State<SearchTravelsPage> {
-  String tripType = "Round Trip"; // Default trip type
-  DateTime? departureDate;
-  DateTime? returnDate;
-
-  // Para Multi City
-  DateTime? multiCityDate1;
-  DateTime? multiCityDate2;
-
-  // Função para abrir o calendário e selecionar a data
-  Future<void> _selectDate(BuildContext context, Function(DateTime) onDateSelected) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) {
-      onDateSelected(picked);
-    }
-  }
-
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text("Search Travels"),
-      backgroundColor: const Color(0xFF0CC0DF),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    ),
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Trip type buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _tripTypeButton("Round Trip"),
-                _tripTypeButton("One Way"),
-                _tripTypeButton("Multi City"),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Fields based on trip type
-            if (tripType == "Round Trip" || tripType == "One Way")
-              Column(
-                children: [
-                  _locationField("INDONESIA, HLP"),
-                  const SizedBox(height: 8),
-                  _locationField("THAILAND, BKK"),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: _dateField(
-                          label: "Departure",
-                          date: departureDate,
-                          onTap: () => _selectDate(context, (date) {
-                            setState(() {
-                              departureDate = date;
-                            });
-                          }),
-                        ),
-                      ),
-                      if (tripType == "Round Trip")
-                        const SizedBox(width: 16),
-                      if (tripType == "Round Trip")
-                        Flexible(
-                          child: _dateField(
-                            label: "Return",
-                            date: returnDate,
-                            onTap: () => _selectDate(context, (date) {
-                              setState(() {
-                                returnDate = date;
-                              });
-                            }),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            if (tripType == "Multi City")
-              Column(
-                children: [
-                  _locationField("INDONESIA, HLP"),
-                  const SizedBox(height: 8),
-                  _locationField("THAILAND, BKK"),
-                  const SizedBox(height: 16),
-                  _dateField(
-                    label: "Departure",
-                    date: multiCityDate1,
-                    onTap: () => _selectDate(context, (date) {
-                      setState(() {
-                        multiCityDate1 = date;
-                      });
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  _locationField("THAILAND, BKK"),
-                  const SizedBox(height: 8),
-                  _locationField("CHINA, PEK"),
-                  const SizedBox(height: 16),
-                  _dateField(
-                    label: "Departure",
-                    date: multiCityDate2,
-                    onTap: () => _selectDate(context, (date) {
-                      setState(() {
-                        multiCityDate2 = date;
-                      });
-                    }),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 24),
-
-            // Search button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchResultsPage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0CC0DF),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              ),
-              child: const Text(
-                "Search",
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-  // Botão para selecionar o tipo de viagem
-  Widget _tripTypeButton(String type) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          tripType = type;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: tripType == type ? const Color(0xFF0CC0DF) : Colors.white,
-        foregroundColor: tripType == type ? Colors.white : Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: Color(0xFF0CC0DF)),
-        ),
-      ),
-      child: Text(type),
-    );
-  }
-
-  // Campo para localização
-  Widget _locationField(String location) {
-    return TextField(
-      decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.flight, color: Color(0xFF0CC0DF)),
-        hintText: location,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  // Campo para data
-  Widget _dateField({required String label, required DateTime? date, required VoidCallback onTap}) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                date != null ? DateFormat('dd/MM/yyyy - EEEE').format(date) : label,
-                style: const TextStyle(fontSize: 14, color: Colors.black),
-              ),
-              const Icon(Icons.calendar_today, color: Color(0xFF0CC0DF)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class SearchResultsPage extends StatefulWidget {
   @override
   State<SearchResultsPage> createState() => _SearchResultsPageState();
@@ -1411,6 +1198,325 @@ class PriceMonitoringPage extends StatelessWidget {
         },
       ),
       selectedIndex: 2,
+    );
+  }
+}
+
+class FlightResultsScreen extends StatefulWidget {
+  final String origin;
+  final String destination;
+  final String departureDate;
+
+  const FlightResultsScreen({
+    required this.origin,
+    required this.destination,
+    required this.departureDate,
+  });
+
+  @override
+  _FlightResultsScreenState createState() => _FlightResultsScreenState();
+}
+
+class _FlightResultsScreenState extends State<FlightResultsScreen> {
+  final LufthansaApiService apiService = LufthansaApiService();
+  List<Flight> flights = [];
+  bool isLoading = false;
+
+  void searchFlights() async {
+    setState(() => isLoading = true);
+
+    try {
+      List<Map<String, dynamic>> response =
+          await apiService.getFlightSchedules(widget.origin, widget.destination, widget.departureDate);
+      setState(() {
+        flights = response.map((data) => Flight.fromJson(data)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Erro ao buscar voos: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
+  String formatDuration(String duration) {
+    final regex = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?');
+    final match = regex.firstMatch(duration);
+
+    if (match != null) {
+      final hours = match.group(1) ?? "0";
+      final minutes = match.group(2) ?? "0";
+
+      if (hours != "0" && minutes != "0") {
+        return "$hours horas e $minutes minutos";
+      } else if (hours != "0") {
+        return "$hours horas";
+      } else {
+        return "$minutes minutos";
+      }
+    }
+    return "Duração desconhecida";
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchFlights();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[200],
+      appBar: AppBar(
+        backgroundColor: Color(0xFF1E88E5),
+        title: Text("${widget.origin} - ${widget.destination}"),
+        centerTitle: true,
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : flights.isEmpty
+              ? Center(child: Text("Nenhum voo encontrado."))
+              : ListView.builder(
+                  padding: EdgeInsets.all(16),
+                  itemCount: flights.length,
+                  itemBuilder: (context, index) {
+                    final flight = flights[index];
+
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      elevation: 3,
+                      margin: EdgeInsets.symmetric(vertical: 10),
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Destino e Companhia Aérea
+                            Text(
+                              "${widget.destination}",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "${getAirlineName(flight.airline)} ${flight.flightNumber}",
+                              style: TextStyle(fontSize: 16, color: Colors.black87),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "Duração: ${formatDuration(flight.duration)}",
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                            SizedBox(height: 10),
+                            Divider(),
+                            SizedBox(height: 10),
+                            // Botões de Ação
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {},
+                                  child: Text("Get Prices"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF42A5F5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {},
+                                  child: Text("Details"),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Color(0xFF1E88E5),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.favorite_border, color: Color(0xFF1E88E5)),
+                                  onPressed: () {},
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+}
+
+class SearchTravelsPage extends StatefulWidget {
+  @override
+  _SearchTravelsPageState createState() => _SearchTravelsPageState();
+}
+
+class _SearchTravelsPageState extends State<SearchTravelsPage> {
+  String tripType = "Round Trip"; // Tipo de viagem padrão
+  DateTime? departureDate;
+  DateTime? returnDate;
+  final TextEditingController originController = TextEditingController();
+  final TextEditingController destinationController = TextEditingController();
+
+  Future<void> _selectDate(BuildContext context, Function(DateTime) onDateSelected) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      onDateSelected(picked);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Search Flights"),
+        backgroundColor: const Color(0xFF0CC0DF),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Botões de seleção de tipo de viagem
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _tripTypeButton("One Way"),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Campos de entrada de origem e destino
+              _textField("Origin", originController),
+              const SizedBox(height: 8),
+              _textField("Destination", destinationController),
+              const SizedBox(height: 16),
+
+              // Seleção de datas
+              Row(
+                children: [
+                  Flexible(
+                    child: _dateField(
+                      label: "Departure",
+                      date: departureDate,
+                      onTap: () => _selectDate(context, (date) {
+                        setState(() {
+                          departureDate = date;
+                        });
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Botão de pesquisa
+              ElevatedButton(
+                onPressed: () {
+                  if (originController.text.isNotEmpty &&
+                      destinationController.text.isNotEmpty &&
+                      departureDate != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FlightResultsScreen(
+                          origin: originController.text.toUpperCase(),
+                          destination: destinationController.text.toUpperCase(),
+                          departureDate: DateFormat('yyyy-MM-dd').format(departureDate!),
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Preencha todos os campos")),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0CC0DF),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                ),
+                child: const Text(
+                  "Search",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Botão para selecionar o tipo de viagem
+  Widget _tripTypeButton(String type) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          tripType = type;
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: tripType == type ? const Color(0xFF0CC0DF) : Colors.white,
+        foregroundColor: tripType == type ? Colors.white : Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Color(0xFF0CC0DF)),
+        ),
+      ),
+      child: Text(type),
+    );
+  }
+
+  // Campo de texto para origem e destino
+  Widget _textField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.flight, color: Color(0xFF0CC0DF)),
+        hintText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  // Campo para selecionar data
+  Widget _dateField({required String label, required DateTime? date, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              date != null ? DateFormat('dd/MM/yyyy - EEEE').format(date) : label,
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+            ),
+            const Icon(Icons.calendar_today, color: Color(0xFF0CC0DF)),
+          ],
+        ),
+      ),
     );
   }
 }
